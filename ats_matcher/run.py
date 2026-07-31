@@ -5,6 +5,12 @@ Examples
 # Live: rank a resume against a list of ATS boards
 python -m ats_matcher.run --companies companies.example.txt --resume resume.txt --top 15
 
+# Fetch + persist to the local SQLite cache and close stale postings
+python -m ats_matcher.run --companies companies.example.txt --resume resume.txt --persist
+
+# Rank against the cached DB without hitting the network
+python -m ats_matcher.run --from-db --resume resume.txt
+
 # Only fresh, Boston-or-remote roles that mention pytorch
 python -m ats_matcher.run --companies companies.example.txt --resume resume.txt \
     --posted-within-hours 24 --location Boston --must-have pytorch
@@ -24,8 +30,9 @@ from datetime import UTC, datetime
 from .env import load_dotenv
 from .matching import JobFilters, get_default_backend, rank
 from .models import Job
-from .providers import fetch_all
+from .providers import fetch_all, parse_spec
 from .resume import build_profile, load_resume_text
+from .storage import DEFAULT_DB_PATH, JobStore
 
 load_dotenv()
 
@@ -116,6 +123,28 @@ def main(argv: list[str] | None = None) -> int:
         "--company", action="append", default=[], help="a single 'provider:token' (repeatable)"
     )
     src.add_argument("--demo", action="store_true", help="use bundled offline sample data")
+    src.add_argument(
+        "--from-db",
+        action="store_true",
+        help="rank against the persisted SQLite cache instead of fetching live",
+    )
+
+    persist = p.add_argument_group("persistence")
+    persist.add_argument(
+        "--db",
+        default=DEFAULT_DB_PATH,
+        help=f"SQLite path for --persist / --from-db (default: {DEFAULT_DB_PATH})",
+    )
+    persist.add_argument(
+        "--persist",
+        action="store_true",
+        help="upsert fresh fetches into the DB and mark stale postings closed",
+    )
+    persist.add_argument(
+        "--include-closed",
+        action="store_true",
+        help="with --from-db, also include postings marked closed",
+    )
 
     p.add_argument("--resume", help="path to resume (.txt/.md/.pdf); defaults to sample in --demo")
     p.add_argument("--top", type=int, default=20)
@@ -145,17 +174,44 @@ def main(argv: list[str] | None = None) -> int:
 
     args = p.parse_args(argv)
 
+    # ---- mutex validation ----
+    live_specs = bool(args.company or args.companies)
+    modes = [args.demo, args.from_db, live_specs]
+    if sum(bool(m) for m in modes) > 1:
+        p.error("--demo, --from-db, and live --companies/--company are mutually exclusive")
+    if args.persist and not live_specs:
+        p.error("--persist requires --companies / --company (nothing to persist otherwise)")
+    if args.include_closed and not args.from_db:
+        p.error("--include-closed only applies with --from-db")
+
     # ---- resolve job source ----
     if args.demo:
         jobs = _load_sample_jobs()
+    elif args.from_db:
+        with JobStore(args.db) as store:
+            jobs = store.open_jobs(include_closed=args.include_closed)
+        print(f"Loaded {len(jobs)} jobs from {args.db}.", file=sys.stderr)
     else:
         specs = list(args.company)
         if args.companies:
             specs += _read_specs(args.companies)
         if not specs:
-            p.error("provide --companies / --company, or use --demo")
+            p.error("provide --companies / --company, --from-db, or --demo")
         print(f"Fetching {len(specs)} board(s)...", file=sys.stderr)
         jobs = fetch_all(specs, max_workers=args.max_workers)
+
+        if args.persist:
+            scanned = [parse_spec(s) for s in specs]
+            now = datetime.now(UTC)
+            with JobStore(args.db) as store:
+                result = store.upsert_jobs(jobs, now=now)
+                closed = store.mark_closed_for_boards(scanned, now=now)
+            print(
+                f"Persisted to {args.db}: +{result.inserted} new, ~{result.updated} refreshed, "
+                f"{closed} marked closed.",
+                file=sys.stderr,
+            )
+
     if not jobs:
         print("No jobs fetched.", file=sys.stderr)
         return 1

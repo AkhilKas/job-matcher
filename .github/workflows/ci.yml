@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check:
+    name: lint + tests + demo
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      # Deliberately minimal: only `requests` (core dep) plus dev tooling and
+      # google-genai (small, verifies the import path). sentence-transformers is
+      # skipped in CI -- the demo exercises the graceful-fallback chain when it's
+      # absent, which is exactly the contract we want to verify.
+      - name: Install deps
+        run: pip install requests 'google-genai>=1.0' 'black>=24.0' 'ruff>=0.7'
+
+      - name: Ruff
+        run: ruff check ats_matcher tests
+
+      - name: Black (check-only)
+        run: black --check ats_matcher tests
+
+      - name: Parser + matching tests
+        run: python tests/test_parsers.py
+
+      - name: Demo smoke test
+        run: python -m ats_matcher.run --demo

@@ -16,6 +16,9 @@ env/
 .mypy_cache/
 .ruff_cache/
 
+# Local persistence (SQLite job store)
+.cache/
+
 # OS / editor
 .DS_Store
 .vscode/

@@ -55,11 +55,13 @@ ats_matcher/
   providers.py   # per-ATS fetch + PURE parse functions, registry, concurrent fetch_all
   resume.py      # load_resume_text, extract_skills, build_profile, optional Gemini hook
   matching.py    # EmbeddingBackend protocol, backends, cosine, apply_filters, rank (chunked)
+  storage.py     # SQLite JobStore: upsert, mark_closed_for_boards, open_jobs
   env.py         # tiny stdlib .env loader
-  run.py         # argparse CLI, --demo mode, pretty + --json output
+  run.py         # argparse CLI, --demo/--persist/--from-db modes, pretty + --json output
   data/          # sample_jobs.json, sample_resume.txt (demo fixtures only)
 tests/test_parsers.py
 tests/test_chunking.py
+tests/test_storage.py
 ```
 
 Flow: `run.py` → `providers.fetch_all(specs)` (or demo fixtures) → `resume.build_profile`
@@ -103,11 +105,14 @@ pip install -r requirements.txt          # requests is the only hard dep
 
 python -m ats_matcher.run --demo          # offline, no network, verifies the pipeline
 python -m ats_matcher.run --companies companies.txt --resume resume.pdf --top 15
+python -m ats_matcher.run --companies companies.txt --resume resume.pdf --persist   # cache + close stale
+python -m ats_matcher.run --from-db --resume resume.pdf                             # rank cached rows
 python -m ats_matcher.run --companies companies.txt --resume resume.txt \
     --posted-within-hours 24 --location Boston --must-have pytorch
 
 python tests/test_parsers.py              # offline parser + matching tests
 python tests/test_chunking.py             # offline JD-chunking tests
+python tests/test_storage.py              # offline JobStore tests (uses tempfile SQLite)
 ```
 
 ## Conventions
@@ -140,7 +145,8 @@ python tests/test_chunking.py             # offline JD-chunking tests
 1. Swap in **Vertex/Gemini embeddings** as a backend to match the user's stack.
 2. Improve match quality: **chunk the JD**, weight requirements/responsibilities sections,
    add a **cross-encoder rerank** over the top ~50.
-3. **Persist + dedupe** across runs (SQLite/Postgres); track when a posting closes.
+3. ~~**Persist + dedupe** across runs (SQLite/Postgres); track when a posting closes.~~
+   Done via `ats_matcher/storage.py` (SQLite). Schema is portable to Postgres later.
 4. **FastAPI** wrapper + React/TypeScript frontend.
 5. Optional **Gemini resume-structuring** (scaffolded in `resume.structure_resume_gemini`)
    to drive smarter seniority/domain filters.

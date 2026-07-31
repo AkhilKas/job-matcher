@@ -1,0 +1,11 @@
+# One board per line, format: provider:token
+# Find the token in the company's careers URL:
+#   boards.greenhouse.io/stripe   -> greenhouse:stripe
+#   jobs.lever.co/spotify         -> lever:spotify
+#   jobs.ashbyhq.com/ramp         -> ashby:ramp
+# Lines starting with # are ignored.
+
+# --- examples (verify these still host on the given ATS before relying on them) ---
+greenhouse:stripe
+lever:palantir
+ashby:openai

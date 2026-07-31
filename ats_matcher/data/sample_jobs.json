@@ -1,0 +1,44 @@
+[
+  {
+    "source": "greenhouse",
+    "company": "acme-ai",
+    "title": "Senior Machine Learning Engineer",
+    "url": "https://boards.greenhouse.io/acme-ai/jobs/1001",
+    "location": "Boston, MA",
+    "department": "Engineering",
+    "team": "ML Platform",
+    "employment_type": "Full-time",
+    "remote": false,
+    "description": "We are hiring a Senior ML Engineer to build production model-training and serving infrastructure. You will work in Python with PyTorch, own MLflow experiment tracking, and ship pipelines with Airflow on GCP (Vertex AI). Strong background in deep learning, embeddings, and RAG systems required. You will collaborate with research and product to move from prototype to production.",
+    "posted_at": "2026-07-28T14:00:00+00:00",
+    "compensation": ""
+  },
+  {
+    "source": "lever",
+    "company": "northwind-labs",
+    "title": "MLOps Engineer",
+    "url": "https://jobs.lever.co/northwind-labs/2002",
+    "location": "Remote",
+    "department": "Infrastructure",
+    "team": "MLOps",
+    "employment_type": "Full-time",
+    "remote": true,
+    "description": "Own the ML platform end-to-end: Airflow orchestration, MLflow model registry, Docker/Kubernetes deployments, and CI/CD via GitHub Actions. Fluent in Python and comfortable with AWS or GCP. Bonus: Terraform, Evidently for monitoring, and experience productionizing PyTorch and scikit-learn models.",
+    "posted_at": "2026-07-29T09:30:00+00:00",
+    "compensation": "$180K - $220K"
+  },
+  {
+    "source": "ashby",
+    "company": "cobalt-health",
+    "title": "Enterprise Sales Executive",
+    "url": "https://jobs.ashbyhq.com/cobalt-health/3003/apply",
+    "location": "New York, NY",
+    "department": "Sales",
+    "team": "Enterprise",
+    "employment_type": "FullTime",
+    "remote": false,
+    "description": "Drive net-new enterprise revenue with hospital systems. Manage a quota against a defined territory, run CRM hygiene in Salesforce, and build a robust pipeline. Six-plus years of complex B2B SaaS sales required. Healthcare experience strongly preferred.",
+    "posted_at": "2026-07-27T18:15:00+00:00",
+    "compensation": "$130K base + variable"
+  }
+]

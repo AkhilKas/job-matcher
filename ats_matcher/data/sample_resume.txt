@@ -1,0 +1,42 @@
+Jane Doe
+jane.doe@example.com  |  Boston, MA
+
+Summary
+-------
+Machine learning engineer with 6 years of experience building and shipping
+production ML systems. Comfortable across the stack: research prototyping in
+PyTorch, distributed training, and end-to-end MLOps with Airflow, MLflow, and
+Kubernetes. Recent focus on LLM applications, embeddings, and retrieval-augmented
+generation (RAG).
+
+Experience
+----------
+Senior ML Engineer, Acme AI  (2023 - present)
+- Built a document-retrieval RAG pipeline serving 40M queries/month; embeddings
+  in PyTorch, vector store on Postgres + pgvector, orchestration via Airflow.
+- Migrated model-training workflows to Vertex AI on GCP; adopted MLflow for
+  experiment tracking, cut iteration time in half.
+- Owned CI/CD for models via GitHub Actions; Docker + Kubernetes for serving.
+
+ML Engineer, Northwind Labs  (2020 - 2023)
+- Shipped a deep-learning recommendation model in production PyTorch; scikit-learn
+  baselines for offline evaluation.
+- Instrumented drift monitoring with Evidently and Great Expectations.
+- Wrote data pipelines in Python (pandas, numpy) and Spark.
+
+Software Engineer, Contoso  (2018 - 2020)
+- Backend REST services in Python (FastAPI) on AWS; Postgres and Redis.
+- Introduced Terraform for reproducible infra.
+
+Skills
+------
+Python, PyTorch, scikit-learn, pandas, numpy, transformers, embeddings, RAG,
+LLM, deep learning, NLP.
+MLflow, Airflow, Docker, Kubernetes, Terraform, GCP, Vertex AI, AWS, GitHub
+Actions, MLOps, Evidently, Great Expectations.
+FastAPI, Postgres, Redis, SQL.
+
+Education
+---------
+M.S. Computer Science, State University  (2018)
+B.S. Mathematics, State University  (2016)

@@ -1,0 +1,12 @@
+# Core (needed for live fetching)
+requests>=2.31
+
+# Recommended: semantic matching. Without it the tool falls back to a lexical
+# (bag-of-words) scorer that still runs but matches far worse.
+sentence-transformers>=2.6
+
+# Optional: only needed to read PDF resumes (.txt/.md work without it)
+pdfplumber>=0.11
+
+# Optional: only needed for the Gemini resume-structuring hook
+# google-genai>=1.0

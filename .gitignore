@@ -25,6 +25,7 @@ env/
 # Local secrets
 .env
 .env.*
+!.env.example
 
 # Personal resume files at the repo root (bundled samples in ats_matcher/data/ are fine)
 /resume.*

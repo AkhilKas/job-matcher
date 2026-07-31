@@ -8,5 +8,5 @@ sentence-transformers>=2.6
 # Optional: only needed to read PDF resumes (.txt/.md work without it)
 pdfplumber>=0.11
 
-# Optional: only needed for the Gemini resume-structuring hook
-# google-genai>=1.0
+# Gemini embedding backend and resume-structuring hook (reads JOB_MATCHER env var)
+google-genai>=1.0

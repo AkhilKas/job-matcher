@@ -90,6 +90,42 @@ class HashingBackend:
         return out
 
 
+# --------------------------------------------------------------------------- #
+# reranker (optional second stage)
+# --------------------------------------------------------------------------- #
+
+
+class Reranker(Protocol):
+    """A second-stage rescorer that scores (query, candidate) text pairs
+    directly, rather than embedding each side separately. Slower per pair
+    but typically much more accurate -- use over the top N from the
+    embedding stage."""
+
+    name: str
+
+    def score(self, pairs: list[tuple[str, str]]) -> list[float]: ...
+
+
+class CrossEncoderReranker:
+    """Local cross-encoder rerank via sentence-transformers. Higher score = more relevant."""
+
+    def __init__(self, model_name: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"):
+        try:
+            from sentence_transformers import CrossEncoder  # lazy: optional dep
+        except ImportError as e:
+            raise ImportError(
+                "cross-encoder rerank needs sentence-transformers -> pip install sentence-transformers"
+            ) from e
+        self.name = f"cross-encoder:{model_name}"
+        self._model = CrossEncoder(model_name)
+
+    def score(self, pairs: list[tuple[str, str]]) -> list[float]:
+        if not pairs:
+            return []
+        scores = self._model.predict(pairs, show_progress_bar=False)
+        return [float(s) for s in scores]
+
+
 def get_default_backend(model_name: str | None = None) -> EmbeddingBackend:
     """Priority: Gemini (if JOB_MATCHER key + SDK are present) ->
     sentence-transformers -> pure-Python hashing fallback."""
@@ -163,6 +199,8 @@ def rank(
     filters: JobFilters | None = None,
     top_k: int = 20,
     keyword_weight: float = 0.0,
+    reranker: Reranker | None = None,
+    rerank_top_n: int = 50,
 ) -> list[MatchResult]:
     """Filter, embed, score, and return the top_k matches.
 
@@ -224,4 +262,19 @@ def rank(
         )
 
     results.sort(key=lambda r: r.final_score, reverse=True)
+
+    if reranker is not None and results:
+        # Rescore the top N with the cross-encoder, then take top_k from that.
+        # Anything beyond rerank_top_n is dropped -- pumping the tail through
+        # the rerank isn't worth the cost, and keeping unranked items mixed in
+        # would create discontinuities in the final ordering.
+        top_n = results[:rerank_top_n]
+        pairs = [(profile.query_text, f"{r.job.title}\n{r.job.description}".strip()) for r in top_n]
+        rerank_scores = reranker.score(pairs)
+        for r, s in zip(top_n, rerank_scores, strict=True):
+            r.rerank_score = s
+            r.final_score = s
+        top_n.sort(key=lambda r: r.final_score, reverse=True)
+        return top_n[:top_k]
+
     return results[:top_k]

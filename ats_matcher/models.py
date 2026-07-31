@@ -73,12 +73,15 @@ class MatchResult:
     semantic_score: float  # cosine similarity, 0..1-ish
     keyword_hits: list[str] = field(default_factory=list)
     final_score: float = 0.0
+    rerank_score: float | None = None  # cross-encoder score, populated only when reranked
 
     def to_dict(self) -> dict:
         d = self.job.to_dict()
         d["semantic_score"] = round(self.semantic_score, 4)
         d["final_score"] = round(self.final_score, 4)
         d["keyword_hits"] = self.keyword_hits
+        if self.rerank_score is not None:
+            d["rerank_score"] = round(self.rerank_score, 4)
         return d
 
 

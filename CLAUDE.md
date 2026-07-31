@@ -51,12 +51,15 @@ If a change request seems to pull toward either of these, flag it rather than im
 ats_matcher/
   models.py      # Job, ResumeProfile, MatchResult, JobFilters (dataclasses)
   textutil.py    # html_to_text (stdlib, no bs4), tokenize, contains_term
+  chunking.py    # chunk_jd: split description into weighted sections
   providers.py   # per-ATS fetch + PURE parse functions, registry, concurrent fetch_all
   resume.py      # load_resume_text, extract_skills, build_profile, optional Gemini hook
-  matching.py    # EmbeddingBackend protocol, backends, cosine, apply_filters, rank
+  matching.py    # EmbeddingBackend protocol, backends, cosine, apply_filters, rank (chunked)
+  env.py         # tiny stdlib .env loader
   run.py         # argparse CLI, --demo mode, pretty + --json output
   data/          # sample_jobs.json, sample_resume.txt (demo fixtures only)
 tests/test_parsers.py
+tests/test_chunking.py
 ```
 
 Flow: `run.py` → `providers.fetch_all(specs)` (or demo fixtures) → `resume.build_profile`
@@ -104,6 +107,7 @@ python -m ats_matcher.run --companies companies.txt --resume resume.txt \
     --posted-within-hours 24 --location Boston --must-have pytorch
 
 python tests/test_parsers.py              # offline parser + matching tests
+python tests/test_chunking.py             # offline JD-chunking tests
 ```
 
 ## Conventions
@@ -122,8 +126,10 @@ python tests/test_parsers.py              # offline parser + matching tests
 
 ## Known limitations (be honest about these)
 
-- Embedding a whole resume against a whole JD dilutes signal; a key requirement and a
-  throwaway line count equally. It is a baseline ranker, not a strong one.
+- JDs are now chunked by section (requirements / responsibilities / nice_to_have / other)
+  with weighted scoring per `ats_matcher/chunking.py`, so a strong match on requirements
+  outranks the same match in a nice-to-have bullet. The resume side is still a single blob,
+  though -- a strong signal in one resume section still gets diluted by weaker sections.
 - The lexical fallback is bag-of-words only.
 - Coverage is limited to companies hosted on Greenhouse/Lever/Ashby. The user supplies the
   company list; there is no discovery of which companies to include.
@@ -141,8 +147,8 @@ python tests/test_parsers.py              # offline parser + matching tests
 
 ## Working agreements for Claude Code
 
-- After any change, run `python tests/test_parsers.py` and `python -m ats_matcher.run --demo`;
-  both must stay green. Add tests for new parsers/behavior.
+- After any change, run every test file in `tests/` and `python -m ats_matcher.run --demo`;
+  all must stay green. Add tests for new parsers/behavior.
 - Keep parser field mappings accurate and verifiable. If unsure about a field, say so
   rather than guessing.
 - Ask before adding a new heavy dependency; prefer stdlib or an optional lazy import.

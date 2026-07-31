@@ -15,6 +15,7 @@ import sys
 from datetime import UTC, datetime
 from typing import Protocol
 
+from .chunking import SECTION_WEIGHTS, chunk_jd
 from .models import Job, JobFilters, MatchResult, ResumeProfile
 from .textutil import contains_term, tokenize
 
@@ -165,21 +166,55 @@ def rank(
 ) -> list[MatchResult]:
     """Filter, embed, score, and return the top_k matches.
 
+    Each job is embedded as: a title-prefix chunk (title + department + team)
+    plus one or more description chunks produced by `chunk_jd` (requirements /
+    responsibilities / nice_to_have / other). All chunks and the resume go
+    through backend.embed in a single batched call. The semantic score for a
+    job is a weighted average of chunk-vs-resume cosine similarities using
+    SECTION_WEIGHTS -- so a strong match on 'requirements' outranks the same
+    match on a 'nice_to_have' bullet.
+
     final = (1 - keyword_weight) * semantic + keyword_weight * skill_overlap
-    keyword_weight=0 -> pure semantic ranking (skills still shown as reasons).
     """
     candidates = apply_filters(jobs, filters) if filters else list(jobs)
     if not candidates:
         return []
 
-    job_texts = [j.search_text() for j in candidates]
-    embeddings = backend.embed([profile.query_text] + job_texts)
-    resume_vec, job_vecs = embeddings[0], embeddings[1:]
+    # Per-job: list of (chunk_text, weight).
+    per_job_parts: list[list[tuple[str, float]]] = []
+    for job in candidates:
+        parts: list[tuple[str, float]] = []
+        title_prefix = "\n".join(p for p in [job.title, job.department, job.team] if p)
+        if title_prefix:
+            parts.append((title_prefix, SECTION_WEIGHTS["title"]))
+        for label, text in chunk_jd(job.description):
+            parts.append((text, SECTION_WEIGHTS.get(label, SECTION_WEIGHTS["other"])))
+        # Guarantee at least one entry so the batching below stays uniform.
+        if not parts:
+            parts.append(("", SECTION_WEIGHTS["other"]))
+        per_job_parts.append(parts)
 
-    n_skills = max(len(profile.skills), 1)
+    # Flatten into one batched embed call: [resume, *all chunks].
+    flat_texts: list[str] = [profile.query_text]
+    boundaries: list[int] = []  # cumulative end index in flat_texts per job
+    for parts in per_job_parts:
+        flat_texts.extend(text for text, _ in parts)
+        boundaries.append(len(flat_texts))
+
+    all_vecs = backend.embed(flat_texts)
+    resume_vec = all_vecs[0]
+
     results: list[MatchResult] = []
-    for job, jv in zip(candidates, job_vecs, strict=True):
-        sem = cosine(resume_vec, jv)
+    start = 1
+    n_skills = max(len(profile.skills), 1)
+    for job, parts, end in zip(candidates, per_job_parts, boundaries, strict=True):
+        chunk_vecs = all_vecs[start:end]
+        weights = [w for _, w in parts]
+        sims = [cosine(resume_vec, v) for v in chunk_vecs]
+        total_w = sum(weights) or 1.0
+        sem = sum(s * w for s, w in zip(sims, weights, strict=True)) / total_w
+        start = end
+
         blob = f"{job.title}\n{job.description}"
         hits = [s for s in profile.skills if contains_term(blob, s)]
         overlap = len(hits) / n_skills

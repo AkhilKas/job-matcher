@@ -32,8 +32,12 @@ jobs:
       - name: Black (check-only)
         run: black --check ats_matcher tests
 
-      - name: Parser + matching tests
-        run: python tests/test_parsers.py
+      - name: Tests
+        run: |
+          for f in tests/test_*.py; do
+            echo "== $f =="
+            python "$f" || exit 1
+          done
 
       - name: Demo smoke test
         run: python -m ats_matcher.run --demo

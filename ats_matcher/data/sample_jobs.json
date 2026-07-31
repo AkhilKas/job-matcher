@@ -9,7 +9,7 @@
     "team": "ML Platform",
     "employment_type": "Full-time",
     "remote": false,
-    "description": "We are hiring a Senior ML Engineer to build production model-training and serving infrastructure. You will work in Python with PyTorch, own MLflow experiment tracking, and ship pipelines with Airflow on GCP (Vertex AI). Strong background in deep learning, embeddings, and RAG systems required. You will collaborate with research and product to move from prototype to production.",
+    "description": "About the role:\nWe are hiring a Senior ML Engineer to build production model-training and serving infrastructure that powers our document-retrieval platform.\n\nResponsibilities:\n- Design and ship model-training and serving pipelines\n- Own experiment tracking, evaluation, and drift monitoring\n- Collaborate with research and product to move from prototype to production\n- Mentor engineers on ML system design\n\nRequirements:\n- Strong Python and PyTorch experience\n- 5+ years shipping ML systems in production\n- Familiarity with MLflow, Airflow, and GCP or AWS\n- Experience with embeddings and RAG systems\n\nNice to have:\n- Vertex AI experience\n- Prior work on LLM applications",
     "posted_at": "2026-07-28T14:00:00+00:00",
     "compensation": ""
   },
@@ -23,7 +23,7 @@
     "team": "MLOps",
     "employment_type": "Full-time",
     "remote": true,
-    "description": "Own the ML platform end-to-end: Airflow orchestration, MLflow model registry, Docker/Kubernetes deployments, and CI/CD via GitHub Actions. Fluent in Python and comfortable with AWS or GCP. Bonus: Terraform, Evidently for monitoring, and experience productionizing PyTorch and scikit-learn models.",
+    "description": "The role:\nOwn the ML platform end-to-end at a fast-growing infra company.\n\nWhat you'll do:\n- Operate Airflow orchestration and the MLflow model registry\n- Ship Docker and Kubernetes deployments for training and inference\n- Automate CI/CD via GitHub Actions and Terraform\n- Instrument monitoring with Evidently\n\nRequirements:\n- Fluent Python\n- Comfortable with AWS or GCP\n- Experience productionizing PyTorch and scikit-learn models\n\nBonus:\n- Terraform expertise\n- Prior on-call for ML systems",
     "posted_at": "2026-07-29T09:30:00+00:00",
     "compensation": "$180K - $220K"
   },
@@ -37,7 +37,7 @@
     "team": "Enterprise",
     "employment_type": "FullTime",
     "remote": false,
-    "description": "Drive net-new enterprise revenue with hospital systems. Manage a quota against a defined territory, run CRM hygiene in Salesforce, and build a robust pipeline. Six-plus years of complex B2B SaaS sales required. Healthcare experience strongly preferred.",
+    "description": "About the role:\nDrive net-new enterprise revenue with hospital systems.\n\nResponsibilities:\n- Manage a quota against a defined territory\n- Run CRM hygiene in Salesforce\n- Build a robust pipeline of qualified opportunities\n\nRequirements:\n- Six-plus years of complex B2B SaaS sales\n- Track record of closing $500K+ deals\n\nPreferred:\n- Healthcare or hospital systems experience",
     "posted_at": "2026-07-27T18:15:00+00:00",
     "compensation": "$130K base + variable"
   }

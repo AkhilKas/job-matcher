@@ -28,7 +28,7 @@ import sys
 from datetime import UTC, datetime
 
 from .env import load_dotenv
-from .matching import JobFilters, get_default_backend, rank
+from .matching import CrossEncoderReranker, JobFilters, get_default_backend, rank
 from .models import Job
 from .providers import fetch_all, parse_spec
 from .resume import build_profile, load_resume_text
@@ -168,6 +168,22 @@ def main(argv: list[str] | None = None) -> int:
         help="0..1 blend of skill overlap into the score",
     )
     mtl.add_argument("--model", default=None, help="sentence-transformers model name")
+    mtl.add_argument(
+        "--rerank",
+        action="store_true",
+        help="rescore the top N candidates with a cross-encoder (needs sentence-transformers)",
+    )
+    mtl.add_argument(
+        "--rerank-top-n",
+        type=int,
+        default=50,
+        help="how many first-stage candidates to send to the reranker (default 50)",
+    )
+    mtl.add_argument(
+        "--rerank-model",
+        default="cross-encoder/ms-marco-MiniLM-L-6-v2",
+        help="cross-encoder model name for --rerank",
+    )
 
     p.add_argument("--max-workers", type=int, default=8)
     p.add_argument("--json", action="store_true", help="emit results as JSON")
@@ -232,8 +248,19 @@ def main(argv: list[str] | None = None) -> int:
         exclude=args.exclude,
     )
     backend = get_default_backend(args.model)
+    reranker = None
+    if args.rerank:
+        print(f"Loading cross-encoder ({args.rerank_model})...", file=sys.stderr)
+        reranker = CrossEncoderReranker(args.rerank_model)
     results = rank(
-        profile, jobs, backend, filters=filters, top_k=args.top, keyword_weight=args.keyword_weight
+        profile,
+        jobs,
+        backend,
+        filters=filters,
+        top_k=args.top,
+        keyword_weight=args.keyword_weight,
+        reranker=reranker,
+        rerank_top_n=args.rerank_top_n,
     )
 
     if args.json:

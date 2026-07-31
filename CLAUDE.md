@@ -54,7 +54,7 @@ ats_matcher/
   chunking.py    # chunk_jd: split description into weighted sections
   providers.py   # per-ATS fetch + PURE parse functions, registry, concurrent fetch_all
   resume.py      # load_resume_text, extract_skills, build_profile, optional Gemini hook
-  matching.py    # EmbeddingBackend protocol, backends, cosine, apply_filters, rank (chunked)
+  matching.py    # EmbeddingBackend + Reranker protocols, backends, cosine, filters, rank (chunked + optional rerank)
   storage.py     # SQLite JobStore: upsert, mark_closed_for_boards, open_jobs
   env.py         # tiny stdlib .env loader
   run.py         # argparse CLI, --demo/--persist/--from-db modes, pretty + --json output
@@ -62,6 +62,7 @@ ats_matcher/
 tests/test_parsers.py
 tests/test_chunking.py
 tests/test_storage.py
+tests/test_reranker.py
 ```
 
 Flow: `run.py` → `providers.fetch_all(specs)` (or demo fixtures) → `resume.build_profile`
@@ -109,6 +110,7 @@ python -m ats_matcher.run --companies companies.txt --resume resume.pdf --persis
 python -m ats_matcher.run --from-db --resume resume.pdf                             # rank cached rows
 python -m ats_matcher.run --companies companies.txt --resume resume.txt \
     --posted-within-hours 24 --location Boston --must-have pytorch
+python -m ats_matcher.run --companies companies.txt --resume resume.txt --rerank   # cross-encoder second stage
 
 python tests/test_parsers.py              # offline parser + matching tests
 python tests/test_chunking.py             # offline JD-chunking tests
@@ -143,8 +145,10 @@ python tests/test_storage.py              # offline JobStore tests (uses tempfil
 ## Roadmap (rough priority)
 
 1. Swap in **Vertex/Gemini embeddings** as a backend to match the user's stack.
-2. Improve match quality: **chunk the JD**, weight requirements/responsibilities sections,
-   add a **cross-encoder rerank** over the top ~50.
+2. ~~Improve match quality: **chunk the JD**, weight requirements/responsibilities sections,
+   add a **cross-encoder rerank** over the top ~50.~~
+   Done via `ats_matcher/chunking.py` (JD chunking + section weights) and
+   `matching.CrossEncoderReranker` (optional `--rerank` second stage over top N).
 3. ~~**Persist + dedupe** across runs (SQLite/Postgres); track when a posting closes.~~
    Done via `ats_matcher/storage.py` (SQLite). Schema is portable to Postgres later.
 4. **FastAPI** wrapper + React/TypeScript frontend.

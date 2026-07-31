@@ -10,3 +10,8 @@ pdfplumber>=0.11
 
 # Gemini embedding backend and resume-structuring hook (reads JOB_MATCHER env var)
 google-genai>=1.0
+
+# HTTP API (only needed if you run `uvicorn ats_matcher.api.main:app`; CLI works without them)
+fastapi>=0.115
+uvicorn[standard]>=0.30
+python-multipart>=0.0.9

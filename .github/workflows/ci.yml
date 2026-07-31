@@ -24,7 +24,9 @@ jobs:
       # skipped in CI -- the demo exercises the graceful-fallback chain when it's
       # absent, which is exactly the contract we want to verify.
       - name: Install deps
-        run: pip install requests 'google-genai>=1.0' 'black>=24.0' 'ruff>=0.7'
+        run: |
+          pip install requests 'google-genai>=1.0' 'black>=24.0' 'ruff>=0.7' \
+                      'fastapi>=0.115' 'python-multipart>=0.0.9' 'httpx>=0.27'
 
       - name: Ruff
         run: ruff check ats_matcher tests

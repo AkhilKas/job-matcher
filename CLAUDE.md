@@ -58,11 +58,13 @@ ats_matcher/
   storage.py     # SQLite JobStore: upsert, mark_closed_for_boards, open_jobs
   env.py         # tiny stdlib .env loader
   run.py         # argparse CLI, --demo/--persist/--from-db modes, pretty + --json output
+  api/           # FastAPI backend: main.create_app + schemas (rank/upload/health/stats)
   data/          # sample_jobs.json, sample_resume.txt (demo fixtures only)
 tests/test_parsers.py
 tests/test_chunking.py
 tests/test_storage.py
 tests/test_reranker.py
+tests/test_api.py
 ```
 
 Flow: `run.py` → `providers.fetch_all(specs)` (or demo fixtures) → `resume.build_profile`
@@ -112,6 +114,8 @@ python -m ats_matcher.run --companies companies.txt --resume resume.txt \
     --posted-within-hours 24 --location Boston --must-have pytorch
 python -m ats_matcher.run --companies companies.txt --resume resume.txt --rerank   # cross-encoder second stage
 
+uvicorn ats_matcher.api.main:app --reload    # run the FastAPI backend (serves ranked jobs from the SQLite cache)
+
 python tests/test_parsers.py              # offline parser + matching tests
 python tests/test_chunking.py             # offline JD-chunking tests
 python tests/test_storage.py              # offline JobStore tests (uses tempfile SQLite)
@@ -151,7 +155,7 @@ python tests/test_storage.py              # offline JobStore tests (uses tempfil
    `matching.CrossEncoderReranker` (optional `--rerank` second stage over top N).
 3. ~~**Persist + dedupe** across runs (SQLite/Postgres); track when a posting closes.~~
    Done via `ats_matcher/storage.py` (SQLite). Schema is portable to Postgres later.
-4. **FastAPI** wrapper + React/TypeScript frontend.
+4. FastAPI wrapper done (`ats_matcher/api/main.py`); React/TypeScript frontend still to build.
 5. Optional **Gemini resume-structuring** (scaffolded in `resume.structure_resume_gemini`)
    to drive smarter seniority/domain filters.
 

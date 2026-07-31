@@ -15,3 +15,16 @@ ignore = ["E501", "E741"]
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["E402"]  # sys.path shim before imports
+
+[tool.ruff.lint.flake8-bugbear]
+# FastAPI's dependency-injection pattern requires calling these in argument
+# defaults; whitelisting them is the standard workaround for B008.
+extend-immutable-calls = [
+  "fastapi.Depends",
+  "fastapi.params.Depends",
+  "fastapi.File",
+  "fastapi.Form",
+  "fastapi.Query",
+  "fastapi.Path",
+  "fastapi.Body",
+]

@@ -12,18 +12,67 @@ from .textutil import contains_term, normalize_ws
 # your field. It does NOT drive the semantic ranking, so gaps here are low-stakes.
 DEFAULT_SKILLS = [
     # languages
-    "python", "typescript", "javascript", "java", "c++", "go", "rust", "scala", "sql",
+    "python",
+    "typescript",
+    "javascript",
+    "java",
+    "c++",
+    "go",
+    "rust",
+    "scala",
+    "sql",
     # ml / ds
-    "pytorch", "tensorflow", "scikit-learn", "keras", "jax", "numpy", "pandas",
-    "machine learning", "deep learning", "nlp", "computer vision", "llm", "transformers",
-    "lstm", "reinforcement learning", "recommendation", "embeddings", "rag",
+    "pytorch",
+    "tensorflow",
+    "scikit-learn",
+    "keras",
+    "jax",
+    "numpy",
+    "pandas",
+    "machine learning",
+    "deep learning",
+    "nlp",
+    "computer vision",
+    "llm",
+    "transformers",
+    "lstm",
+    "reinforcement learning",
+    "recommendation",
+    "embeddings",
+    "rag",
     # mlops / infra
-    "mlflow", "airflow", "kubeflow", "dvc", "docker", "kubernetes", "terraform",
-    "vertex ai", "sagemaker", "gcp", "aws", "azure", "spark", "kafka",
-    "ci/cd", "github actions", "mlops", "evidently", "great expectations",
+    "mlflow",
+    "airflow",
+    "kubeflow",
+    "dvc",
+    "docker",
+    "kubernetes",
+    "terraform",
+    "vertex ai",
+    "sagemaker",
+    "gcp",
+    "aws",
+    "azure",
+    "spark",
+    "kafka",
+    "ci/cd",
+    "github actions",
+    "mlops",
+    "evidently",
+    "great expectations",
     # backend / web
-    "fastapi", "flask", "django", "react", "node", "graphql", "rest", "grpc",
-    "postgres", "redis", "mongodb", "microservices",
+    "fastapi",
+    "flask",
+    "django",
+    "react",
+    "node",
+    "graphql",
+    "rest",
+    "grpc",
+    "postgres",
+    "redis",
+    "mongodb",
+    "microservices",
 ]
 
 
@@ -33,7 +82,7 @@ def load_resume_text(path: str) -> str:
         raise FileNotFoundError(f"resume not found: {path}")
     ext = os.path.splitext(path)[1].lower()
     if ext in (".txt", ".md", ".text", ""):
-        with open(path, "r", encoding="utf-8", errors="replace") as f:
+        with open(path, encoding="utf-8", errors="replace") as f:
             return normalize_ws(f.read())
     if ext == ".pdf":
         return _read_pdf(path)

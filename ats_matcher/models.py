@@ -4,24 +4,23 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Optional
 
 
 @dataclass
 class Job:
     """A single job posting, normalized across ATS providers."""
 
-    source: str                       # 'greenhouse' | 'lever' | 'ashby'
-    company: str                      # the board token / slug it came from
+    source: str  # 'greenhouse' | 'lever' | 'ashby'
+    company: str  # the board token / slug it came from
     title: str
-    url: str                          # apply / hosted URL
+    url: str  # apply / hosted URL
     location: str = ""
     department: str = ""
     team: str = ""
     employment_type: str = ""
-    remote: Optional[bool] = None     # None = unknown
-    description: str = ""             # plain text
-    posted_at: Optional[datetime] = None
+    remote: bool | None = None  # None = unknown
+    description: str = ""  # plain text
+    posted_at: datetime | None = None
     compensation: str = ""
     external_id: str = ""
     raw: dict = field(default_factory=dict, repr=False)
@@ -71,7 +70,7 @@ class ResumeProfile:
 @dataclass
 class MatchResult:
     job: Job
-    semantic_score: float             # cosine similarity, 0..1-ish
+    semantic_score: float  # cosine similarity, 0..1-ish
     keyword_hits: list[str] = field(default_factory=list)
     final_score: float = 0.0
 
@@ -87,8 +86,8 @@ class MatchResult:
 class JobFilters:
     """Hard filters applied before ranking."""
 
-    location: Optional[str] = None            # case-insensitive substring
+    location: str | None = None  # case-insensitive substring
     remote_only: bool = False
-    posted_within_hours: Optional[float] = None
-    must_have: list[str] = field(default_factory=list)   # all must appear
-    exclude: list[str] = field(default_factory=list)     # none may appear
+    posted_within_hours: float | None = None
+    must_have: list[str] = field(default_factory=list)  # all must appear
+    exclude: list[str] = field(default_factory=list)  # none may appear

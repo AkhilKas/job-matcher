@@ -19,9 +19,9 @@ from __future__ import annotations
 
 import sys
 import time
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import datetime, timezone
-from typing import Callable, Optional
+from datetime import UTC, datetime
 
 import requests
 
@@ -39,7 +39,8 @@ VALID_PROVIDERS = ("greenhouse", "lever", "ashby")
 # date parsing
 # --------------------------------------------------------------------------- #
 
-def parse_iso(s: Optional[str]) -> Optional[datetime]:
+
+def parse_iso(s: str | None) -> datetime | None:
     if not s:
         return None
     try:
@@ -48,20 +49,20 @@ def parse_iso(s: Optional[str]) -> Optional[datetime]:
             s = s[:-1] + "+00:00"
         dt = datetime.fromisoformat(s)
         if dt.tzinfo is None:
-            dt = dt.replace(tzinfo=timezone.utc)
+            dt = dt.replace(tzinfo=UTC)
         return dt
     except (ValueError, TypeError):
         return None
 
 
-def parse_epoch_ms(n) -> Optional[datetime]:
+def parse_epoch_ms(n) -> datetime | None:
     try:
-        return datetime.fromtimestamp(float(n) / 1000.0, tz=timezone.utc)
+        return datetime.fromtimestamp(float(n) / 1000.0, tz=UTC)
     except (TypeError, ValueError, OSError):
         return None
 
 
-def _looks_remote(*texts: str) -> Optional[bool]:
+def _looks_remote(*texts: str) -> bool | None:
     joined = " ".join(t for t in texts if t).lower()
     if "remote" in joined:
         return True
@@ -72,6 +73,7 @@ def _looks_remote(*texts: str) -> Optional[bool]:
 # parsers  (pure functions: JSON in, list[Job] out -- unit-testable offline)
 # --------------------------------------------------------------------------- #
 
+
 def parse_greenhouse(data: dict, token: str) -> list[Job]:
     jobs: list[Job] = []
     for j in (data or {}).get("jobs", []) or []:
@@ -79,21 +81,23 @@ def parse_greenhouse(data: dict, token: str) -> list[Job]:
         depts = j.get("departments") or []
         dept = depts[0].get("name", "") if depts else ""
         desc = html_to_text(j.get("content", "") or "")
-        jobs.append(Job(
-            source="greenhouse",
-            company=token,
-            title=normalize_ws(j.get("title", "") or ""),
-            url=j.get("absolute_url", "") or "",
-            location=normalize_ws(loc),
-            department=normalize_ws(dept),
-            team="",
-            employment_type="",
-            remote=_looks_remote(loc, j.get("title", "")),
-            description=desc,
-            posted_at=parse_iso(j.get("updated_at")),
-            external_id=str(j.get("id", "")),
-            raw=j,
-        ))
+        jobs.append(
+            Job(
+                source="greenhouse",
+                company=token,
+                title=normalize_ws(j.get("title", "") or ""),
+                url=j.get("absolute_url", "") or "",
+                location=normalize_ws(loc),
+                department=normalize_ws(dept),
+                team="",
+                employment_type="",
+                remote=_looks_remote(loc, j.get("title", "")),
+                description=desc,
+                posted_at=parse_iso(j.get("updated_at")),
+                external_id=str(j.get("id", "")),
+                raw=j,
+            )
+        )
     return jobs
 
 
@@ -103,27 +107,29 @@ def parse_lever(data: list, token: str) -> list[Job]:
         cats = j.get("categories") or {}
         wtype = (j.get("workplaceType") or "").strip().lower()
         if wtype == "remote":
-            remote: Optional[bool] = True
+            remote: bool | None = True
         elif wtype in ("on-site", "onsite", "hybrid"):
             remote = False
         else:
             remote = _looks_remote(cats.get("location", ""))
         desc = j.get("descriptionPlain") or html_to_text(j.get("description", "") or "")
-        jobs.append(Job(
-            source="lever",
-            company=token,
-            title=normalize_ws(j.get("text", "") or ""),
-            url=j.get("hostedUrl") or j.get("applyUrl") or "",
-            location=normalize_ws(cats.get("location", "") or ""),
-            department=normalize_ws(cats.get("department", "") or ""),
-            team=normalize_ws(cats.get("team", "") or ""),
-            employment_type=normalize_ws(cats.get("commitment", "") or ""),
-            remote=remote,
-            description=normalize_ws(desc),
-            posted_at=parse_epoch_ms(j.get("createdAt")),
-            external_id=str(j.get("id", "")),
-            raw=j,
-        ))
+        jobs.append(
+            Job(
+                source="lever",
+                company=token,
+                title=normalize_ws(j.get("text", "") or ""),
+                url=j.get("hostedUrl") or j.get("applyUrl") or "",
+                location=normalize_ws(cats.get("location", "") or ""),
+                department=normalize_ws(cats.get("department", "") or ""),
+                team=normalize_ws(cats.get("team", "") or ""),
+                employment_type=normalize_ws(cats.get("commitment", "") or ""),
+                remote=remote,
+                description=normalize_ws(desc),
+                posted_at=parse_epoch_ms(j.get("createdAt")),
+                external_id=str(j.get("id", "")),
+                raw=j,
+            )
+        )
     return jobs
 
 
@@ -138,21 +144,23 @@ def parse_ashby(data: dict, token: str) -> list[Job]:
         if isinstance(comp_obj, dict):
             comp = comp_obj.get("compensationTierSummary", "") or ""
         desc = j.get("descriptionPlain") or html_to_text(j.get("descriptionHtml", "") or "")
-        jobs.append(Job(
-            source="ashby",
-            company=token,
-            title=normalize_ws(j.get("title", "") or ""),
-            url=j.get("applyUrl") or j.get("jobUrl") or "",
-            location=normalize_ws(j.get("location", "") or ""),
-            department=normalize_ws(j.get("department", "") or ""),
-            team=normalize_ws(j.get("team", "") or ""),
-            employment_type=normalize_ws(j.get("employmentType", "") or ""),
-            remote=j.get("isRemote") if isinstance(j.get("isRemote"), bool) else None,
-            description=normalize_ws(desc),
-            posted_at=parse_iso(j.get("publishedAt")),
-            compensation=normalize_ws(comp),
-            raw=j,
-        ))
+        jobs.append(
+            Job(
+                source="ashby",
+                company=token,
+                title=normalize_ws(j.get("title", "") or ""),
+                url=j.get("applyUrl") or j.get("jobUrl") or "",
+                location=normalize_ws(j.get("location", "") or ""),
+                department=normalize_ws(j.get("department", "") or ""),
+                team=normalize_ws(j.get("team", "") or ""),
+                employment_type=normalize_ws(j.get("employmentType", "") or ""),
+                remote=j.get("isRemote") if isinstance(j.get("isRemote"), bool) else None,
+                description=normalize_ws(desc),
+                posted_at=parse_iso(j.get("publishedAt")),
+                compensation=normalize_ws(comp),
+                raw=j,
+            )
+        )
     return jobs
 
 

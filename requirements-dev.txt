@@ -1,0 +1,6 @@
+# Dev-only tooling. Not required to run the app.
+-r requirements.txt
+
+black>=24.0
+ruff>=0.7
+pre-commit>=3.7

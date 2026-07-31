@@ -7,8 +7,22 @@ import re
 from html.parser import HTMLParser
 
 _BLOCK_TAGS = {
-    "p", "br", "div", "li", "ul", "ol", "tr", "table",
-    "h1", "h2", "h3", "h4", "h5", "h6", "section", "article",
+    "p",
+    "br",
+    "div",
+    "li",
+    "ul",
+    "ol",
+    "tr",
+    "table",
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6",
+    "section",
+    "article",
 }
 
 

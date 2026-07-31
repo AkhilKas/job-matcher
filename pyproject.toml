@@ -1,0 +1,17 @@
+[tool.black]
+line-length = 100
+target-version = ["py312"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = [".venv", "build", "dist"]
+
+[tool.ruff.lint]
+# Reasonable default: pyflakes + pycodestyle + isort + pyupgrade + bugbear.
+select = ["E", "F", "I", "UP", "B"]
+# Line-too-long is enforced by black; ambiguous names are noisy for math code.
+ignore = ["E501", "E741"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["E402"]  # sys.path shim before imports

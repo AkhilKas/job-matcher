@@ -6,27 +6,33 @@ Run: python tests/test_parsers.py
 
 import os
 import sys
-from datetime import timezone
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from ats_matcher.providers import parse_greenhouse, parse_lever, parse_ashby, parse_spec  # noqa: E402
-from ats_matcher.textutil import html_to_text  # noqa: E402
-from ats_matcher.matching import cosine, HashingBackend, apply_filters  # noqa: E402
+from ats_matcher.matching import HashingBackend, apply_filters, cosine  # noqa: E402
 from ats_matcher.models import Job, JobFilters  # noqa: E402
+from ats_matcher.providers import (
+    parse_ashby,
+    parse_greenhouse,
+    parse_lever,
+    parse_spec,
+)  # noqa: E402
+from ats_matcher.textutil import html_to_text  # noqa: E402
 
 
 def test_greenhouse():
     data = {
-        "jobs": [{
-            "id": 12345,
-            "title": "Senior ML Engineer",
-            "updated_at": "2026-07-29T18:30:00-04:00",
-            "location": {"name": "Remote - US"},
-            "absolute_url": "https://boards.greenhouse.io/demo/jobs/12345",
-            "content": "&lt;p&gt;Build &lt;strong&gt;ML&lt;/strong&gt; systems.&lt;/p&gt;&lt;p&gt;Great team.&lt;/p&gt;",
-            "departments": [{"id": 1, "name": "Engineering"}],
-        }]
+        "jobs": [
+            {
+                "id": 12345,
+                "title": "Senior ML Engineer",
+                "updated_at": "2026-07-29T18:30:00-04:00",
+                "location": {"name": "Remote - US"},
+                "absolute_url": "https://boards.greenhouse.io/demo/jobs/12345",
+                "content": "&lt;p&gt;Build &lt;strong&gt;ML&lt;/strong&gt; systems.&lt;/p&gt;&lt;p&gt;Great team.&lt;/p&gt;",
+                "departments": [{"id": 1, "name": "Engineering"}],
+            }
+        ]
     }
     jobs = parse_greenhouse(data, "demo")
     assert len(jobs) == 1
@@ -44,17 +50,24 @@ def test_greenhouse():
 
 
 def test_lever():
-    data = [{
-        "id": "abc-123",
-        "text": "MLOps Engineer",
-        "categories": {"commitment": "Full-time", "department": "Infra", "team": "MLOps", "location": "Remote"},
-        "descriptionPlain": "Own the ML infrastructure with Airflow and MLflow.",
-        "description": "<p>ignored when plain present</p>",
-        "createdAt": 1753800000000,
-        "hostedUrl": "https://jobs.lever.co/demo/abc-123",
-        "applyUrl": "https://jobs.lever.co/demo/abc-123/apply",
-        "workplaceType": "remote",
-    }]
+    data = [
+        {
+            "id": "abc-123",
+            "text": "MLOps Engineer",
+            "categories": {
+                "commitment": "Full-time",
+                "department": "Infra",
+                "team": "MLOps",
+                "location": "Remote",
+            },
+            "descriptionPlain": "Own the ML infrastructure with Airflow and MLflow.",
+            "description": "<p>ignored when plain present</p>",
+            "createdAt": 1753800000000,
+            "hostedUrl": "https://jobs.lever.co/demo/abc-123",
+            "applyUrl": "https://jobs.lever.co/demo/abc-123/apply",
+            "workplaceType": "remote",
+        }
+    ]
     jobs = parse_lever(data, "demo")
     assert len(jobs) == 1
     j = jobs[0]
@@ -144,12 +157,33 @@ def test_cosine_and_hashing():
 
 def test_filters():
     jobs = [
-        Job(source="x", company="c", title="ML Engineer", url="", location="Boston, MA", remote=False,
-            description="pytorch mlops"),
-        Job(source="x", company="c", title="Remote ML", url="", location="Remote", remote=True,
-            description="pytorch"),
-        Job(source="x", company="c", title="Sales", url="", location="Boston, MA", remote=False,
-            description="quota crm"),
+        Job(
+            source="x",
+            company="c",
+            title="ML Engineer",
+            url="",
+            location="Boston, MA",
+            remote=False,
+            description="pytorch mlops",
+        ),
+        Job(
+            source="x",
+            company="c",
+            title="Remote ML",
+            url="",
+            location="Remote",
+            remote=True,
+            description="pytorch",
+        ),
+        Job(
+            source="x",
+            company="c",
+            title="Sales",
+            url="",
+            location="Boston, MA",
+            remote=False,
+            description="quota crm",
+        ),
     ]
     assert len(apply_filters(jobs, JobFilters(location="boston"))) == 2
     assert len(apply_filters(jobs, JobFilters(remote_only=True))) == 1
